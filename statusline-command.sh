@@ -2,6 +2,9 @@
 # ~/.claude/statusline-command.sh
 # Displays: model name | progress bar | used/total tokens | percentage
 
+# printf "%'d" needs a locale with thousands separators; the caller's env may not set one
+export LC_NUMERIC="en_US.UTF-8"
+
 input=$(cat)
 
 model=$(echo "$input" | jq -r '.model.display_name // "Unknown model"')
