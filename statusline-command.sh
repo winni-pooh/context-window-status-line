@@ -2,8 +2,11 @@
 # ~/.claude/statusline-command.sh
 # Displays: model name | progress bar | used/total tokens | percentage
 
-# printf "%'d" needs a locale with thousands separators; the caller's env may not set one
-export LC_NUMERIC="en_US.UTF-8"
+# printf "%'d" needs a locale with thousands-separator data installed (e.g. en_US.UTF-8),
+# which isn't guaranteed on every machine this script runs on. Insert commas manually instead.
+with_commas() {
+  echo "$1" | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta'
+}
 
 input=$(cat)
 
@@ -29,13 +32,18 @@ if [ -n "$pct" ] && [ "$total" -gt 0 ]; then
   bar=""
   for i in $(seq 1 "$filled"); do bar="${bar}█"; done
   for i in $(seq 1 "$empty");  do bar="${bar}░"; done
-  printf "%s  [${color}%s${reset}] %'d / %'d  (${color}%.0f%%${reset})" \
+  printf "%s  [${color}%s${reset}] %s / %s  (${color}%.0f%%${reset})" \
     "$model" \
     "$bar" \
-    "$used" \
-    "$total" \
+    "$(with_commas "$used")" \
+    "$(with_commas "$total")" \
     "$pct"
 else
-  # No messages yet — show model and window size only
-  printf "%s  [%s]  ctx: %'d" "$model" "░░░░░░░░░░░░░░░░░░░░" "$total"
+  # No messages yet — same format as above, but zeroed out and uncolored
+  printf "%s  [%s] %s / %s  (%.0f%%)" \
+    "$model" \
+    "░░░░░░░░░░░░░░░░░░░░" \
+    "0" \
+    "$(with_commas "$total")" \
+    "0"
 fi
